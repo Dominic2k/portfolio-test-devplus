@@ -1,73 +1,24 @@
-// Cấu hình Username GitHub của bạn
-const username = "dominic2k"; // Thay bằng username của bạn
+const filterButtons = document.querySelectorAll(".filter-btn");
+const projectCards = document.querySelectorAll(".project-card");
 
-// Fetch GitHub Repos
-async function getRepos() {
-    const container = document.getElementById("repo-container");
+filterButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        filterButtons.forEach((btn) => btn.classList.remove("active"));
 
-    try {
-        // Thêm &per_page=100 để lấy tối đa 100 repo
-        const response = await fetch(
-            `https://api.github.com/users/${username}/repos?sort=updated&direction=desc&per_page=100`
-        );
+        button.classList.add("active");
 
-        if (!response.ok) throw new Error("Không thể kết nối GitHub");
+        const filter = button.dataset.filter;
 
-        const repos = await response.json();
-
-        // Xóa loading text
-        container.innerHTML = "";
-
-        // Kiểm tra nếu không có repo nào
-        if (repos.length === 0) {
-            container.innerHTML = "<p>Chưa có dự án nào được công khai.</p>";
-            return;
-        }
-
-        // Duyệt qua TẤT CẢ repo thay vì chỉ 6 cái
-        repos.forEach((repo) => {
-            const card = document.createElement("div");
-            card.classList.add("project-card");
-
-            const description = repo.description
-                ? repo.description
-                : "Chưa có mô tả cho dự án này.";
-
-            // Màu sắc cho ngôn ngữ
-            let langColor = "#ccc";
-            if (repo.language === "JavaScript") langColor = "#f1e05a";
-            if (repo.language === "HTML") langColor = "#e34c26";
-            if (repo.language === "CSS") langColor = "#563d7c";
-            if (repo.language === "TypeScript") langColor = "#2b7489";
-            if (repo.language === "Python") langColor = "#3572A5";
-            if (repo.language === "Java") langColor = "#b07219";
-            if (repo.language === "PHP") langColor = "#4F5D95";
-
-            card.innerHTML = `
-                <a href="${repo.html_url}" target="_blank">
-                    <h3>${repo.name}</h3>
-                    <p>${description}</p>
-                    <div class="project-stats">
-                        <span><span class="lang-dot" style="background-color: ${langColor}"></span>${
-                repo.language || "Code"
-            }</span>
-                        <span><i class="far fa-star"></i> ${
-                            repo.stargazers_count
-                        }</span>
-                    </div>
-                </a>
-            `;
-
-            container.appendChild(card);
+        projectCards.forEach((card) => {
+            if (filter === "all" || card.dataset.category === filter) {
+                card.classList.remove("hide");
+            } else {
+                card.classList.add("hide");
+            }
         });
-    } catch (error) {
-        container.innerHTML = `<p style="color: red; text-align: center;">Lỗi tải dữ liệu: ${error.message}</p>`;
-    }
-}
+    });
+});
 
-document.addEventListener("DOMContentLoaded", getRepos);
-
-// Smooth Scroll
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener("click", function (e) {
         e.preventDefault();
@@ -75,4 +26,148 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
             behavior: "smooth",
         });
     });
+});
+
+const timelineItems = document.querySelectorAll(".timeline-item");
+
+const observer = new IntersectionObserver(
+    (entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                observer.unobserve(entry.target);
+            }
+        });
+    },
+    {
+        threshold: 0.1,
+    }
+);
+
+timelineItems.forEach((item) => {
+    observer.observe(item);
+});
+
+const skillsContainer = document.querySelector(".skills-container");
+const skillProgressBars = document.querySelectorAll(".skill-progress");
+
+const skillObserver = new IntersectionObserver(
+    (entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                skillProgressBars.forEach((bar) => {
+                    const progress = bar.getAttribute("data-progress");
+                    bar.style.width = progress;
+                });
+                skillObserver.unobserve(skillsContainer);
+            }
+        });
+    },
+    {
+        threshold: 0.2,
+    }
+);
+
+if (skillsContainer) {
+    skillObserver.observe(skillsContainer);
+}
+
+const contactForm = document.getElementById("contact-form");
+const nameInput = document.getElementById("name");
+const emailInput = document.getElementById("email");
+const messageInput = document.getElementById("message");
+const formMessage = document.querySelector(".form-message");
+
+function showError(input, message) {
+    const formGroup = input.parentElement;
+    formGroup.classList.add("error");
+    const errorDisplay = formGroup.querySelector(".error-message");
+    errorDisplay.innerText = message;
+}
+
+function showSuccess(input) {
+    const formGroup = input.parentElement;
+    formGroup.classList.remove("error");
+    const errorDisplay = formGroup.querySelector(".error-message");
+    errorDisplay.innerText = "";
+}
+
+function isEmail(email) {
+    const re =
+        /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
+
+if (contactForm) {
+    contactForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        let isValid = true;
+
+        if (nameInput.value.trim() === "") {
+            showError(nameInput, "Vui lòng nhập tên của bạn.");
+            isValid = false;
+        } else {
+            showSuccess(nameInput);
+        }
+
+        if (emailInput.value.trim() === "") {
+            showError(emailInput, "Vui lòng nhập email.");
+            isValid = false;
+        } else if (!isEmail(emailInput.value.trim())) {
+            showError(emailInput, "Email không hợp lệ.");
+            isValid = false;
+        } else {
+            showSuccess(emailInput);
+        }
+
+        if (messageInput.value.trim() === "") {
+            showError(messageInput, "Vui lòng để lại lời nhắn.");
+            isValid = false;
+        } else {
+            showSuccess(messageInput);
+        }
+
+        if (isValid) {
+            formMessage.textContent =
+                "Cảm ơn bạn đã liên hệ! Tôi sẽ phản hồi sớm nhất có thể.";
+            formMessage.className = "form-message success";
+
+            setTimeout(() => {
+                contactForm.reset();
+                formMessage.style.display = "none";
+            }, 4000);
+        }
+    });
+}
+
+const backToTopButton = document.getElementById("back-to-top");
+
+window.addEventListener("scroll", () => {
+    if (window.scrollY > 300) {
+        backToTopButton.classList.add("visible");
+    } else {
+        backToTopButton.classList.remove("visible");
+    }
+});
+const themeSwitch = document.querySelector(".theme-switch");
+const rootHtml = document.documentElement;
+
+function applyTheme(theme) {
+    if (theme === "dark") {
+        rootHtml.setAttribute("data-theme", "dark");
+    } else {
+        rootHtml.setAttribute("data-theme", "light");
+    }
+}
+
+const savedTheme = localStorage.getItem("portfolio-theme");
+if (savedTheme) {
+    applyTheme(savedTheme);
+}
+
+themeSwitch.addEventListener("click", () => {
+    const currentTheme = rootHtml.getAttribute("data-theme");
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    applyTheme(newTheme);
+    localStorage.setItem("portfolio-theme", newTheme);
 });
